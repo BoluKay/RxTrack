@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 function PieChart({ data, total }) {
   const cx=90, cy=90, r=72, ir=44;
@@ -57,6 +58,7 @@ export default function App() {
   const [inventory, setInventory] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [forecast, setForecast] = useState(null);
+  const [salesHistory, setSalesHistory] = useState([]);
   const [hovered, setHovered] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -72,6 +74,8 @@ export default function App() {
   const getForecast = (id) => {
     fetch(`http://localhost:8000/forecast/${id}`)
       .then(r=>r.json()).then(d=>setForecast(d));
+    fetch(`http://localhost:8000/sales/${id}`)
+      .then(r=>r.json()).then(d=>setSalesHistory(d));
   };
 
   if (loading) return (
@@ -217,7 +221,7 @@ export default function App() {
       {/* Modal */}
       {forecast && (
         <div onClick={()=>setForecast(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",backdropFilter:"blur(4px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200}}>
-          <div onClick={e=>e.stopPropagation()} style={{background:"#13161f",border:"1px solid #1e2535",borderRadius:"12px",padding:"24px",width:"340px"}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"#13161f",border:"1px solid #1e2535",borderRadius:"12px",padding:"24px",width:"400px"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"18px"}}>
               <div>
                 <div style={{fontSize:"10px",color:"#475569",letterSpacing:"1.5px",textTransform:"uppercase",marginBottom:"4px"}}>ML Forecast</div>
@@ -236,6 +240,23 @@ export default function App() {
                 <span style={{fontSize:"13px",fontFamily:"'DM Mono', monospace",color:"#e2e8f0"}}>{value}</span>
               </div>
             ))}
+            {salesHistory.length > 0 && (
+              <div style={{marginTop:"16px"}}>
+                <div style={{fontSize:"11px",color:"#475569",marginBottom:"8px",letterSpacing:"0.5px"}}>30-DAY SALES TREND</div>
+                <ResponsiveContainer width="100%" height={100}>
+                  <LineChart data={salesHistory.slice(-30)}>
+                    <XAxis dataKey="sale_date" hide={true}/>
+                    <YAxis hide={true}/>
+                    <Tooltip
+                      contentStyle={{background:"#1e2535",border:"1px solid #2d3548",borderRadius:"6px",fontSize:"11px"}}
+                      labelFormatter={label => label}
+                      formatter={(value) => [value + " units", "Sales"]}
+                    />
+                    <Line type="monotone" dataKey="quantity_sold" stroke="#6366f1" strokeWidth={2} dot={false}/>
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
             <div style={{marginTop:"16px",padding:"12px",background:forecast.needs_reorder?"#ef444415":"#10b98115",border:`1px solid ${forecast.needs_reorder?"#ef444430":"#10b98130"}`,borderRadius:"8px",textAlign:"center",color:forecast.needs_reorder?"#ef4444":"#10b981",fontWeight:"500",fontSize:"13px"}}>
               {forecast.needs_reorder?"⚠ Immediate reorder required":"✓ Stock levels healthy"}
             </div>

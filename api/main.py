@@ -69,3 +69,15 @@ def get_forecast(medication_id: int):
         "predicted_days_of_stock": round(float(predicted_days), 2),
         "needs_reorder": bool(df["needs_reorder"].values[0])
     }
+    
+# --- ENDPOINT 5: Get sales history for a medication ---
+@app.get("/sales/{medication_id}")
+def get_sales_history(medication_id: int):
+    df = pd.read_sql(
+        f"SELECT sale_date, quantity_sold FROM sales WHERE medication_id = {medication_id} ORDER BY sale_date",
+        engine
+    )
+    if df.empty:
+        return []
+    df["sale_date"] = df["sale_date"].dt.strftime("%Y-%m-%d")
+    return df.to_dict(orient="records")
