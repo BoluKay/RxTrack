@@ -1,0 +1,26 @@
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Airflow virtual environment
+airflow-venv/
+
+# ML model (large binary file)
+ml/model.pkl
+
+# Node modules
+frontend/node_modules/
