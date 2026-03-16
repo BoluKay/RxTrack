@@ -67,9 +67,10 @@ def get_forecast(medication_id: int):
         "current_quantity": int(df["current_quantity"].values[0]),
         "avg_daily_sales": round(float(df["avg_daily_sales"].values[0]), 2),
         "predicted_days_of_stock": round(float(predicted_days), 2),
+        "lead_time_days": int(df["lead_time_days"].values[0]),
         "needs_reorder": bool(df["needs_reorder"].values[0])
     }
-    
+
 # --- ENDPOINT 5: Get sales history for a medication ---
 @app.get("/sales/{medication_id}")
 def get_sales_history(medication_id: int):
