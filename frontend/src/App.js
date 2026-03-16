@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 
-function PieChart({ data }) {
+function PieChart({ data, total }) {
   const cx=90, cy=90, r=72, ir=44;
-  const total = data.reduce((s,d)=>s+d.value,0);
+  const pieTotal = data.reduce((s,d)=>s+d.value,0);
   let angle = -Math.PI/2;
   const slices = data.map(d => {
-    const sweep = (d.value/total)*2*Math.PI;
+    const sweep = (d.value/pieTotal)*2*Math.PI;
     const x1=cx+r*Math.cos(angle), y1=cy+r*Math.sin(angle);
     angle+=sweep;
     const x2=cx+r*Math.cos(angle), y2=cy+r*Math.sin(angle);
@@ -45,7 +45,12 @@ function getStatus(days, lead) {
 const catColors = {
   "Painkiller":"#6366f1","Antibiotic":"#8b5cf6","Diabetes":"#06b6d4",
   "Blood Pressure":"#f59e0b","Cholesterol":"#10b981","Antacid":"#ef4444",
-  "Thyroid":"#ec4899","Antidepressant":"#14b8a6"
+  "Thyroid":"#ec4899","Antidepressant":"#14b8a6","ADHD":"#f97316",
+  "Contraceptive":"#a855f7","Antihistamine":"#06b6d4","Anxiety":"#64748b",
+  "Nerve Pain":"#0ea5e9","Muscle Relaxant":"#84cc16","Steroid":"#eab308",
+  "Diuretic":"#14b8a6","Asthma":"#6366f1","Sleep Aid":"#8b5cf6",
+  "Blood Thinner":"#ef4444","Seizure":"#f59e0b","Antipsychotic":"#10b981",
+  "Antifungal":"#ec4899","Nausea":"#06b6d4"
 };
 
 export default function App() {
@@ -54,6 +59,8 @@ export default function App() {
   const [forecast, setForecast] = useState(null);
   const [hovered, setHovered] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
 
   useEffect(() => {
     fetch("http://localhost:8000/inventory")
@@ -79,14 +86,21 @@ export default function App() {
   const avgDays = inventory.length ? (inventory.reduce((s,i)=>s+i.days_of_stock_remaining,0)/inventory.length).toFixed(1) : 0;
 
   const pieData = [
-    {label:"Critical", value:Math.max(critical,1), color:"#ef4444"},
-    {label:"Warning", value:Math.max(warning,1), color:"#f59e0b"},
+    {label:"Critical", value:critical || 0.001, color:"#ef4444"},
+    {label:"Warning", value:warning || 0.001, color:"#f59e0b"},
     {label:"Healthy", value:ok, color:"#10b981"},
   ];
 
+  const filteredInventory = inventory.filter(item => {
+    const matchSearch = item.medication_name.toLowerCase().includes(search.toLowerCase()) ||
+                        item.category.toLowerCase().includes(search.toLowerCase());
+    const s = getStatus(item.days_of_stock_remaining, item.lead_time_days);
+    const matchStatus = filterStatus === "All" || s.label === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
   return (
-    <div style={{minHeight:"100vh",background:"#0f1117",color:"#e2e8f0",
-    fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:"14px"}}>
+    <div style={{minHeight:"100vh",background:"#0f1117",color:"#e2e8f0",fontFamily:"'DM Sans', system-ui, sans-serif",fontSize:"14px"}}>
 
       {/* Header */}
       <div style={{background:"#13161f",borderBottom:"1px solid #1e2535",padding:"14px 32px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:100}}>
@@ -129,7 +143,7 @@ export default function App() {
             </div>
           ))}
           <div style={{background:"#13161f",border:"1px solid #1e2535",borderRadius:"10px",padding:"14px",display:"flex",flexDirection:"column",alignItems:"center",gap:"8px"}}>
-            <PieChart data={pieData}/>
+            <PieChart data={pieData} total={inventory.length}/>
             <div style={{display:"flex",gap:"10px"}}>
               {pieData.map(d=>(
                 <div key={d.label} style={{display:"flex",alignItems:"center",gap:"4px",fontSize:"10px",color:"#64748b"}}>
@@ -143,9 +157,23 @@ export default function App() {
 
         {/* Table */}
         <div style={{background:"#13161f",border:"1px solid #1e2535",borderRadius:"10px",overflow:"hidden"}}>
-          <div style={{padding:"14px 20px",borderBottom:"1px solid #1e2535",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{padding:"14px 20px",borderBottom:"1px solid #1e2535",display:"flex",justifyContent:"space-between",alignItems:"center",gap:"12px"}}>
             <span style={{fontWeight:"500"}}>Inventory overview</span>
-            <span style={{fontSize:"11px",color:"#475569",fontFamily:"'DM Mono', monospace"}}>{inventory.length} medications</span>
+            <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+              <input
+                value={search}
+                onChange={e=>setSearch(e.target.value)}
+                placeholder="Search medications..."
+                style={{background:"#0f1117",border:"1px solid #2d3548",color:"#e2e8f0",padding:"6px 12px",borderRadius:"6px",fontSize:"12px",outline:"none",width:"200px",fontFamily:"'DM Sans', sans-serif"}}
+              />
+              {["All","HEALTHY","WARNING","CRITICAL"].map(f=>(
+                <button key={f} onClick={()=>setFilterStatus(f)}
+                  style={{background:filterStatus===f?"#6366f1":"transparent",border:`1px solid ${filterStatus===f?"#6366f1":"#2d3548"}`,color:filterStatus===f?"white":"#94a3b8",padding:"5px 12px",borderRadius:"6px",fontSize:"11px",cursor:"pointer",fontFamily:"'DM Sans', sans-serif"}}>
+                  {f}
+                </button>
+              ))}
+              <span style={{fontSize:"11px",color:"#475569",fontFamily:"'DM Mono', monospace"}}>{filteredInventory.length} medications</span>
+            </div>
           </div>
           <table style={{width:"100%",borderCollapse:"collapse"}}>
             <thead>
@@ -156,7 +184,7 @@ export default function App() {
               </tr>
             </thead>
             <tbody>
-              {inventory.map(item=>{
+              {filteredInventory.map(item=>{
                 const s = getStatus(item.days_of_stock_remaining, item.lead_time_days);
                 const c = catColors[item.category] || "#6366f1";
                 return (
