@@ -4,6 +4,7 @@ A full-stack data engineering and machine learning project that tracks pharmacy 
 
 ## Live Demo
 ![RxTrack Dashboard](docs/dashboard.png)
+![Forecast Modal](docs/forecast.png)
 
 ## Tech Stack
 | Layer | Technology |
@@ -17,7 +18,9 @@ A full-stack data engineering and machine learning project that tracks pharmacy 
 
 ## Features
 - **ETL Pipeline** — ingests inventory, sales, and supplier data from multiple sources into a PostgreSQL data warehouse
-- **ML Forecasting** — Random Forest model predicts days of stock remaining with 1.36 day MAE and 0.85 R²
+- **ML Forecasting** — Random Forest model predicts days of stock remaining with 2.21 day MAE and 0.84 R² across 50 medications and 18,250+ sales records
+- **Search & Filter** — filter inventory by status or search by medication name or category
+- **Sales Trend Charts** — 30-day sales history visualization per medication
 - **Real-time API** — FastAPI backend serves inventory data and live ML predictions
 - **Interactive Dashboard** — React frontend with shortage alerts, color-coded status indicators, and per-medication forecasts
 - **Automated Scheduling** — Apache Airflow DAG runs the pipeline daily
@@ -89,6 +92,8 @@ npm start
 
 Visit **http://localhost:3000**
 
+
+
 ## Model Performance
-- **Mean Absolute Error:** 1.36 days
-- **R² Score:** 0.85
+- **Mean Absolute Error:** 2.21 days
+- **R² Score:** 0.84
